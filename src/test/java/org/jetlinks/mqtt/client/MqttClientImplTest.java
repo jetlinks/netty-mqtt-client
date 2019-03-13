@@ -26,11 +26,11 @@ public class MqttClientImplTest {
 
         for (int i = 0; i < 1; i++) {
             MqttClient mqttClient = new MqttClientImpl(((topic, payload) -> {
-                System.out.println(topic + "=>" + payload.toString());
+                System.out.println(topic + "=>" + payload.toString(StandardCharsets.UTF_8));
             }));
 
             mqttClient.setEventLoop(loop);
-            mqttClient.getClientConfig().setClientId("test2");
+            mqttClient.getClientConfig().setClientId("test");
             mqttClient.getClientConfig().setUsername("test");
             mqttClient.getClientConfig().setPassword("test");
             mqttClient.getClientConfig().setProtocolVersion(MqttVersion.MQTT_3_1_1);
@@ -54,7 +54,7 @@ public class MqttClientImplTest {
                 if (future.get().getReturnCode() != MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                     System.out.println("失败原因:" + future.get().getReturnCode());
                     mqttClient.disconnect();
-                }else{
+                } else {
                     mqttClient.publish("test", Unpooled.copiedBuffer("{\"type\":\"read-property\"}", StandardCharsets.UTF_8));
                 }
             }
