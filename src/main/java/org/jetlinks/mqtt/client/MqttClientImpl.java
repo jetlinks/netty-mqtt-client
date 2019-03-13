@@ -137,10 +137,6 @@ final class MqttClientImpl implements MqttClient {
                 if (callback != null) {
                     callback.connectionLost(f.cause());
                 }
-                if (!getClientConfig().isReconnect() && connectFuture.isCancellable()) {
-                    connectFuture.setFailure(f.cause());
-                    return;
-                }
                 scheduleConnectIfRequired(host, port, reconnect);
             }
         });

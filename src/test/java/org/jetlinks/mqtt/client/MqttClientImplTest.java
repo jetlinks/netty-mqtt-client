@@ -8,6 +8,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttVersion;
 import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
@@ -47,19 +48,18 @@ public class MqttClientImplTest {
 
                 }
             });
-            Future<MqttConnectResult> future = mqttClient.connect("127.0.0.1", 1883);
-            boolean success = future.await(4, TimeUnit.SECONDS);
-            System.out.println(i + " connect:" + success);
-            if (success) {
-                if (future.get().getReturnCode() != MqttConnectReturnCode.CONNECTION_ACCEPTED) {
-                    System.out.println("失败原因:" + future.get().getReturnCode());
-                    mqttClient.disconnect();
-                } else {
-                    mqttClient.publish("test", Unpooled.copiedBuffer("{\"type\":\"read-property\"}", StandardCharsets.UTF_8));
-                }
+            MqttConnectResult result = mqttClient.connect("127.0.0.1", 1883)
+                    .await()
+                    .get();
+            if (result.getReturnCode() != MqttConnectReturnCode.CONNECTION_ACCEPTED) {
+                System.out.println("error:" + result.getReturnCode());
+                mqttClient.disconnect();
+            } else {
+                System.out.println("success");
+                mqttClient.publish("test", Unpooled.copiedBuffer("{\"type\":\"read-property\"}", StandardCharsets.UTF_8));
             }
-
         }
+
     }
 
 }
