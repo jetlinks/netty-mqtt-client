@@ -113,9 +113,15 @@ final class MqttClientImpl implements MqttClient {
                     if (isConnected()) {
                         return;
                     }
-                    ChannelClosedException e = new ChannelClosedException("Channel is closed!");
                     if (callback != null) {
-                        callback.connectionLost(e);
+                        MqttConnectResult result = connectFuture.getNow();
+                        if (result != null) {
+                            ChannelClosedException e = new ChannelClosedException(result.getReturnCode().name());
+                            callback.connectionLost(e);
+                        } else {
+                            ChannelClosedException e = new ChannelClosedException("Channel is closed!");
+                            callback.connectionLost(e);
+                        }
                     }
                     pendingSubscriptions.clear();
                     serverSubscriptions.clear();
