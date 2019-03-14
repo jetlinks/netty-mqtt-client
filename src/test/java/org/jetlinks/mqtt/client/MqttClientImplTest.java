@@ -35,7 +35,7 @@ public class MqttClientImplTest {
             mqttClient.getClientConfig().setUsername("test");
             mqttClient.getClientConfig().setPassword("test");
             mqttClient.getClientConfig().setProtocolVersion(MqttVersion.MQTT_3_1_1);
-            mqttClient.getClientConfig().setReconnect(true);
+            mqttClient.getClientConfig().setReconnect(false);
             mqttClient.setCallback(new MqttClientCallback() {
                 @Override
                 public void connectionLost(Throwable cause) {
