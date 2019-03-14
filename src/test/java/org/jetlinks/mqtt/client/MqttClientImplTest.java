@@ -1,17 +1,12 @@
 package org.jetlinks.mqtt.client;
 
 import io.netty.buffer.Unpooled;
-import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttVersion;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -22,16 +17,15 @@ public class MqttClientImplTest {
 
 
     public static void main(String[] args) throws Exception {
-
         EventLoopGroup loop = new NioEventLoopGroup();
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 1000; i++) {
             MqttClient mqttClient = new MqttClientImpl(((topic, payload) -> {
                 System.out.println(topic + "=>" + payload.toString(StandardCharsets.UTF_8));
             }));
 
             mqttClient.setEventLoop(loop);
-            mqttClient.getClientConfig().setClientId("test");
+            mqttClient.getClientConfig().setClientId("test" + i);
             mqttClient.getClientConfig().setUsername("test");
             mqttClient.getClientConfig().setPassword("test");
             mqttClient.getClientConfig().setProtocolVersion(MqttVersion.MQTT_3_1_1);
