@@ -21,7 +21,7 @@ public class MqttClientImplTest {
     public static void main(String[] args) throws Exception {
         EventLoopGroup loop = new EpollEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2);
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10000; i++) {
             MqttClient mqttClient = new MqttClientImpl(((topic, payload) -> {
                 System.out.println(topic + "=>" + payload.toString(StandardCharsets.UTF_8));
             }));
@@ -44,7 +44,7 @@ public class MqttClientImplTest {
 
                 }
             });
-            MqttConnectResult result = mqttClient.connect("127.0.0.1", 1883)
+            MqttConnectResult result = mqttClient.connect("192.168.0.26", 1883)
                     .await()
                     .get();
             if (result.getReturnCode() != MqttConnectReturnCode.CONNECTION_ACCEPTED) {
