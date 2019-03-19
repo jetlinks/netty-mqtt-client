@@ -103,6 +103,8 @@ final class MqttClientImpl implements MqttClient {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(this.eventLoop);
         bootstrap.channel(clientConfig.getChannelClass());
+        bootstrap.option(ChannelOption.SO_REUSEADDR, true);
+
         bootstrap.remoteAddress(host, port);
         bootstrap.handler(new MqttChannelInitializer(connectFuture, host, port, clientConfig.getSslContext()));
         ChannelFuture future = bootstrap.connect();
@@ -121,7 +123,7 @@ final class MqttClientImpl implements MqttClient {
                                 callback.connectionLost(e);
                             }
                         } else {
-                            ChannelClosedException e = new ChannelClosedException("Channel is closed!");
+                            ChannelClosedException e = new ChannelClosedException("Channel is closed!", channelFuture.cause());
                             callback.connectionLost(e);
                         }
                     }
