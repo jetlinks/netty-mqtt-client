@@ -5,6 +5,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.mqtt.MqttVersion;
 import io.netty.handler.ssl.SslContext;
 
+import java.net.SocketAddress;
 import java.util.Random;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
@@ -21,6 +22,8 @@ public final class MqttClientConfig {
     private boolean                  cleanSession    = true;
     private MqttLastWill             lastWill;
     private Class<? extends Channel> channelClass    = NioSocketChannel.class;
+
+    private SocketAddress bindAddress;
 
     private boolean reconnect     = true;
     private long    retryInterval = 1L;
@@ -137,5 +140,13 @@ public final class MqttClientConfig {
 
     public void setRetryInterval(long retryInterval) {
         this.retryInterval = retryInterval;
+    }
+
+    public SocketAddress getBindAddress() {
+        return bindAddress;
+    }
+
+    public void setBindAddress(SocketAddress bindAddress) {
+        this.bindAddress = bindAddress;
     }
 }
