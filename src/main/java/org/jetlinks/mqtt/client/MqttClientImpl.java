@@ -105,10 +105,11 @@ final class MqttClientImpl implements MqttClient {
         bootstrap.channel(clientConfig.getChannelClass());
         bootstrap.option(ChannelOption.SO_REUSEADDR, true);
         bootstrap.remoteAddress(host, port);
-        bootstrap.handler(new MqttChannelInitializer(connectFuture, host, port, clientConfig.getSslContext()));
         if (clientConfig.getBindAddress() != null) {
-            bootstrap.bind(clientConfig.getBindAddress());
+            bootstrap.localAddress(clientConfig.getBindAddress());
         }
+        bootstrap.handler(new MqttChannelInitializer(connectFuture, host, port, clientConfig.getSslContext()));
+
         ChannelFuture future = bootstrap.connect();
         future.addListener((ChannelFutureListener) f -> {
             if (f.isSuccess()) {
