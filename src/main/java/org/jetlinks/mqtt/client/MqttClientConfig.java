@@ -5,28 +5,33 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.mqtt.MqttVersion;
 import io.netty.handler.ssl.SslContext;
 
+import javax.net.ssl.SSLEngine;
 import java.net.SocketAddress;
 import java.util.Random;
+import java.util.function.Consumer;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class MqttClientConfig {
 
-    private final SslContext sslContext;
-    private final String     randomClientId;
+    private SslContext sslContext;
+    private final String randomClientId;
 
-    private String                   clientId;
-    private int                      timeoutSeconds  = 60;
-    private MqttVersion              protocolVersion = MqttVersion.MQTT_3_1;
-    private String                   username        = null;
-    private String                   password        = null;
-    private boolean                  cleanSession    = true;
-    private MqttLastWill             lastWill;
-    private Class<? extends Channel> channelClass    = NioSocketChannel.class;
+    private String clientId;
+    private int timeoutSeconds = 60;
+    private MqttVersion protocolVersion = MqttVersion.MQTT_3_1;
+    private String username = null;
+    private String password = null;
+    private boolean cleanSession = true;
+    private MqttLastWill lastWill;
+
+    private Class<? extends Channel> channelClass = NioSocketChannel.class;
 
     private SocketAddress bindAddress;
 
-    private boolean reconnect     = true;
-    private long    retryInterval = 1L;
+    private Consumer<SSLEngine> sslEngineConsumer=(engine)->{};
+
+    private boolean reconnect = true;
+    private long retryInterval = 1L;
 
     public MqttClientConfig() {
         this(null);
@@ -126,6 +131,10 @@ public final class MqttClientConfig {
         return sslContext;
     }
 
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
     public boolean isReconnect() {
         return reconnect;
     }
@@ -148,5 +157,13 @@ public final class MqttClientConfig {
 
     public void setBindAddress(SocketAddress bindAddress) {
         this.bindAddress = bindAddress;
+    }
+
+    public Consumer<SSLEngine> getSslEngineConsumer() {
+        return sslEngineConsumer;
+    }
+
+    public void setSslEngineConsumer(Consumer<SSLEngine> sslEngineConsumer) {
+        this.sslEngineConsumer = sslEngineConsumer;
     }
 }

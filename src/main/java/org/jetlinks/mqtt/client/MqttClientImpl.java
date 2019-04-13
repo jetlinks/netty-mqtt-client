@@ -9,15 +9,18 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
+import javax.net.ssl.SSLEngine;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Represents an MqttClientImpl connected to a single MQTT server. Will try to keep the connection going at all times
@@ -25,15 +28,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings({"WeakerAccess", "unused"})
 final class MqttClientImpl implements MqttClient {
 
-    private final Set<String>                                 serverSubscriptions          = new HashSet<>();
-    private final IntObjectHashMap<MqttPendingUnsubscription> pendingServerUnsubscribes    = new IntObjectHashMap<>();
-    private final IntObjectHashMap<MqttIncomingQos2Publish>   qos2PendingIncomingPublishes = new IntObjectHashMap<>();
-    private final IntObjectHashMap<MqttPendingPublish>        pendingPublishes             = new IntObjectHashMap<>();
-    private final HashMultimap<String, MqttSubscription>      subscriptions                = HashMultimap.create();
-    private final IntObjectHashMap<MqttPendingSubscription>   pendingSubscriptions         = new IntObjectHashMap<>();
-    private final Set<String>                                 pendingSubscribeTopics       = new HashSet<>();
-    private final HashMultimap<MqttHandler, MqttSubscription> handlerToSubscribtion        = HashMultimap.create();
-    private final AtomicInteger                               nextMessageId                = new AtomicInteger(1);
+    private final Set<String> serverSubscriptions = new HashSet<>();
+    private final IntObjectHashMap<MqttPendingUnsubscription> pendingServerUnsubscribes = new IntObjectHashMap<>();
+    private final IntObjectHashMap<MqttIncomingQos2Publish> qos2PendingIncomingPublishes = new IntObjectHashMap<>();
+    private final IntObjectHashMap<MqttPendingPublish> pendingPublishes = new IntObjectHashMap<>();
+    private final HashMultimap<String, MqttSubscription> subscriptions = HashMultimap.create();
+    private final IntObjectHashMap<MqttPendingSubscription> pendingSubscriptions = new IntObjectHashMap<>();
+    private final Set<String> pendingSubscribeTopics = new HashSet<>();
+    private final HashMultimap<MqttHandler, MqttSubscription> handlerToSubscribtion = HashMultimap.create();
+    private final AtomicInteger nextMessageId = new AtomicInteger(1);
 
     private final MqttClientConfig clientConfig;
 
@@ -43,11 +46,11 @@ final class MqttClientImpl implements MqttClient {
 
     private volatile Channel channel;
 
-    private volatile boolean            disconnected = false;
-    private volatile boolean            reconnect    = false;
-    private          String             host;
-    private          int                port;
-    private          MqttClientCallback callback;
+    private volatile boolean disconnected = false;
+    private volatile boolean reconnect = false;
+    private String host;
+    private int port;
+    private MqttClientCallback callback;
 
 
     /**
@@ -108,7 +111,7 @@ final class MqttClientImpl implements MqttClient {
         if (clientConfig.getBindAddress() != null) {
             bootstrap.localAddress(clientConfig.getBindAddress());
         }
-        bootstrap.handler(new MqttChannelInitializer(connectFuture, host, port, clientConfig.getSslContext()));
+        bootstrap.handler(new MqttChannelInitializer(connectFuture, host, port, clientConfig.getSslContext(),clientConfig.getSslEngineConsumer()));
 
         ChannelFuture future = bootstrap.connect();
         future.addListener((ChannelFutureListener) f -> {
@@ -494,22 +497,31 @@ final class MqttClientImpl implements MqttClient {
     private class MqttChannelInitializer extends ChannelInitializer<SocketChannel> {
 
         private final Promise<MqttConnectResult> connectFuture;
-        private final String                     host;
-        private final int                        port;
-        private final SslContext                 sslContext;
+        private final String host;
+        private final int port;
+        private final SslContext sslContext;
+        private final Consumer<SSLEngine> sslEngineConsumer;
 
 
-        public MqttChannelInitializer(Promise<MqttConnectResult> connectFuture, String host, int port, SslContext sslContext) {
+        public MqttChannelInitializer(Promise<MqttConnectResult> connectFuture,
+                                      String host,
+                                      int port,
+                                      SslContext sslContext,
+                                      Consumer<SSLEngine> engineConsumer) {
             this.connectFuture = connectFuture;
             this.host = host;
             this.port = port;
             this.sslContext = sslContext;
+            this.sslEngineConsumer = engineConsumer;
         }
 
         @Override
         protected void initChannel(SocketChannel ch) throws Exception {
             if (sslContext != null) {
-                ch.pipeline().addLast(sslContext.newHandler(ch.alloc(), host, port));
+
+                SSLEngine engine = sslContext.newEngine(ch.alloc(), host, port);
+                sslEngineConsumer.accept(engine);
+                ch.pipeline().addFirst("ssl", new SslHandler(engine));
             }
 
             ch.pipeline().addLast("mqttDecoder", new MqttDecoder());
