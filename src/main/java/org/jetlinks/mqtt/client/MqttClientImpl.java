@@ -127,10 +127,12 @@ final class MqttClientImpl implements MqttClient {
                             if (result.getReturnCode() != MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                                 ChannelClosedException e = new ChannelClosedException(result.getReturnCode().name());
                                 callback.connectionLost(e);
+                                connectFuture.tryFailure(e);
                             }
                         } else {
                             ChannelClosedException e = new ChannelClosedException("Channel is closed!", channelFuture.cause());
                             callback.connectionLost(e);
+                            connectFuture.tryFailure(e);
                         }
                     }
                     pendingSubscriptions.clear();
@@ -147,6 +149,7 @@ final class MqttClientImpl implements MqttClient {
                 if (callback != null) {
                     callback.connectionLost(f.cause());
                 }
+                connectFuture.tryFailure(f.cause());
                 scheduleConnectIfRequired(host, port, reconnect);
             }
         });
