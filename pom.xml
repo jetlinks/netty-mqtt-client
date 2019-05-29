@@ -8,6 +8,7 @@
 
     <name>Netty MQTT Client</name>
     <url>https://github.com/jetlinks/netty-mqtt-client</url>
+    <description>Netty MQTT Client</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -29,6 +30,18 @@
         <url>https://github.com/jetlinks/netty-mqtt-client</url>
         <tag>${project.version}</tag>
     </scm>
+
+    <developers>
+        <developer>
+            <name>zhouhao</name>
+            <email>i@hsweb.me</email>
+            <roles>
+                <role>Owner</role>
+            </roles>
+            <timezone>+8</timezone>
+            <url>https://github.com/zhou-hao</url>
+        </developer>
+    </developers>
 
     <profiles>
         <profile>
